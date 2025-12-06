@@ -3,7 +3,7 @@
   "displayName": "Set faces to In Your Face",
   "description": "Set faces to In Your Face, shows your personalized 'Uncanny Faces' that correlate to the number of errors in your code!",
   "version": "0.0.1",
-  "publisher": "bunny-tales",
+  "publisher": "BunnyTalessss",
   "homepage": "https://github.com/bunny-tales",
   "license": "MIT",
   "repository": {
@@ -33,7 +33,7 @@
     "Set faces to In Your Face"
   ],
   "__metadata": {
-    "publisherDisplayName": "bunny-tales"
+    "publisherDisplayName": "BunnyTalessss"
   },
   "activationEvents": [
     "onCommand:set-faces-to-in-your-face.openview.focus",
@@ -117,3 +117,4 @@
   }
 
 }
+
