@@ -138,7 +138,6 @@ export function activate(context: vscode.ExtensionContext) {
     }
 
     let numErrors = 0;
-    let numWarnings = 0;
 
     if (errorLensEnabled) {
       let aggregatedDiagnostics: any = {};
@@ -165,10 +164,6 @@ export function activate(context: vscode.ExtensionContext) {
             numErrors += 1;
             break;
 
-          case 1:
-            numWarnings += 1;
-            break;
-
           // Ignore other severities.
         }
       }
@@ -177,11 +172,11 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 class CustomSidebarViewProvider implements vscode.WebviewViewProvider {
-  public static readonly viewType = "in-your-face.openview";
+  public static readonly viewType = "set-faces-to-in-your-face.openview";
 
   private _view?: vscode.WebviewView;
 
-  constructor(private readonly _extensionUri: vscode.Uri) {}
+  constructor(private readonly _extensionUri: vscode.Uri) { }
 
   resolveWebviewView(
     webviewView: vscode.WebviewView,
@@ -190,84 +185,103 @@ class CustomSidebarViewProvider implements vscode.WebviewViewProvider {
   ): void | Thenable<void> {
     this._view = webviewView;
 
+    // 1. LER CONFIGURAÇÃO
+    const config = vscode.workspace.getConfiguration('set-faces-to-in-your-face');
+    const customImagePath = config.get<string>('customErrorImage0');
+
+    let customImageDir: vscode.Uri[] = [];
+
+    // 2. TENTAR OBTER O DIRETÓRIO RAIZ PARA A IMAGEM CUSTOMIZADA
+    if (customImagePath && customImagePath.length > 0) {
+      try {
+        // Cria um URI a partir do caminho do arquivo (se for um caminho local)
+        const imageUri = vscode.Uri.file(customImagePath);
+
+        // Adiciona o diretório pai (o 'pai' do arquivo) ao array de raízes.
+        // Isso permite que o Webview carregue o arquivo.
+        customImageDir.push(vscode.Uri.joinPath(imageUri, '..'));
+
+      } catch (e) {
+        // Ignora: provavelmente é uma URL HTTP/HTTPS, que não precisa ser tratada aqui.
+        console.log("Caminho de imagem personalizada não é um URI de arquivo local válido.");
+      }
+    }
+
+    // 3. DEFINIR OPÇÕES DO WEBVIEW
     webviewView.webview.options = {
       // Allow scripts in the webview
       enableScripts: true,
-      localResourceRoots: [this._extensionUri],
+      // Adiciona o URI da extensão (para assets internos) E os URIs dos diretórios customizados
+      localResourceRoots: [
+        this._extensionUri,
+        ...customImageDir
+      ],
     };
 
     // default webview will show doom face 0
-    webviewView.webview.html = this.getHtmlContent(webviewView.webview, false);
+    webviewView.webview.html = this.getHtmlContent(webviewView.webview);
 
     // This is called every second is decides which doom face to show in the webview
     setInterval(() => {
-      webviewView.webview.html = this.getHtmlContent(webviewView.webview, true);
-      
+      // Nota: É mais eficiente usar um método de atualização dedicado (_updateWebview)
+      // do que redefinir o HTML a cada segundo, mas para este exemplo, manteremos assim:
+      webviewView.webview.html = this.getHtmlContent(webviewView.webview);
+
     }, 1000);
   }
 
-  private getHtmlContent(webview: vscode.Webview, flag:boolean): string {
+  private getHtmlContent(webview: vscode.Webview): string {
 
-    let errorFace:any;
-    let warningFace:any;
+    // Lê todas as configurações de imagens personalizadas
+    const config = vscode.workspace.getConfiguration('set-faces-to-in-your-face');
 
-    let errors = getNumErrAndWarn()[0];
-    let warnings = getNumErrAndWarn()[1];
-    
-    //Condition to check if function is called for first time or not. 
-    if(!flag){
+    let errors = getNumErr()[0];
+    let errorFace: any;
+
+    // Variáveis para armazenar o caminho/URL do nível de erro correspondente
+    let customImagePath: string | undefined;
+    let defaultImagePath: string; // O caminho padrão a ser usado se não houver customização
+
+    // 1. Determina o Nível de Erro e qual caminho de customização e padrão usar
+    if (errors === 0) {
+      customImagePath = config.get<string>('customErrorImage0');
+      defaultImagePath = "incredible0.png";
+    }
+    else if (errors < 5) {
+      customImagePath = config.get<string>('customErrorImage1');
+      defaultImagePath = "incredible1.png";
+    }
+    else if (errors < 10) {
+      customImagePath = config.get<string>('customErrorImage2');
+      defaultImagePath = "incredible2.png";
+    }
+    else {
+      customImagePath = config.get<string>('customErrorImage3');
+      defaultImagePath = "incredible3.png";
+    }
+
+    // 2. Aplica a Imagem
+    if (customImagePath && customImagePath.length > 0) {
+      // Se houver um caminho personalizado configurado para ESTE NÍVEL, use-o
+      try {
+        const customUri = vscode.Uri.file(customImagePath);
+        errorFace = webview.asWebviewUri(customUri);
+      } catch (e) {
+        // Se for uma URL (http/https), usa o caminho como está.
+        errorFace = customImagePath;
+      }
+    } else {
+      // Se NÃO houver caminho personalizado para este nível, usa o padrão
       errorFace = webview.asWebviewUri(
-        vscode.Uri.joinPath(this._extensionUri, "assets", "incredible0.png")
-        );
-      warningFace = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "assets", "incredible0.png"));
+        vscode.Uri.joinPath(this._extensionUri, "assets", defaultImagePath)
+      );
     }
-    else{
-      if(errors===0){
-        errorFace = webview.asWebviewUri(
-          vscode.Uri.joinPath(this._extensionUri, "assets", "incredible0.png")
-          );
-      }
-      else if(errors<5){
-        errorFace = webview.asWebviewUri(
-          vscode.Uri.joinPath(this._extensionUri, "assets", "incredible1.png")
-          );
-      }
-      else if(errors<10){
-        errorFace = webview.asWebviewUri(
-          vscode.Uri.joinPath(this._extensionUri, "assets", "incredible2.png")
-          );
-      }
-      else{
-        errorFace = webview.asWebviewUri(
-          vscode.Uri.joinPath(this._extensionUri, "assets", "incredible3.png")
-          );
-      }
-      if(warnings===0){
-        warningFace = webview.asWebviewUri(
-          vscode.Uri.joinPath(this._extensionUri, "assets", "incredible0.png")
-          );
-      }
-      else if(warnings<5){
-        warningFace = webview.asWebviewUri(
-          vscode.Uri.joinPath(this._extensionUri, "assets", "incredible1.png")
-          );
-      }
-      else if(warnings<10){
-        warningFace = webview.asWebviewUri(
-          vscode.Uri.joinPath(this._extensionUri, "assets", "incredible2.png")
-          );
-      }
-      else{
-        warningFace = webview.asWebviewUri(
-          vscode.Uri.joinPath(this._extensionUri, "assets", "incredible3.png")
-          );
-      }
-    }
-	  return getHtml(errorFace, warningFace);
-	}
+
+    return getHtml(errorFace);
+  }
 }
 
-function getHtml(incredibleErrorFace: any, incredibleWarningFace:any) {
+function getHtml(incredibleErrorFace: any) {
   return `
     <!DOCTYPE html>
 			<html lang="en">
@@ -278,9 +292,7 @@ function getHtml(incredibleErrorFace: any, incredibleWarningFace:any) {
 			<body>
 			<section class="wrapper">
       <img class="doomFaces" src="${incredibleErrorFace}" alt="" >
-      <h1 id="errorNum">${getNumErrAndWarn()[0] + " errors"}</h1>
-      <img class="doomFaces" src="${incredibleWarningFace}" alt="" >
-      <h1 id="errorNum">${getNumErrAndWarn()[1] + " warnings"}</h1>
+      <h1 id="errorNum">${getNumErr()[0] + " errors"}</h1>
 			</section>
       </body>
 
@@ -288,17 +300,15 @@ function getHtml(incredibleErrorFace: any, incredibleWarningFace:any) {
   `;
 }
 
-// function to get the number of errors and warnings in the open file
-function getNumErrAndWarn(): number[] {
+// function to get the number of errors in the open file
+function getNumErr(): number[] {
   const activeTextEditor: vscode.TextEditor | undefined =
     vscode.window.activeTextEditor;
-    let numErrors = 0;
-    let numWarnings = 0;
-    let numErrandWarn:number[] = [];
+  let numErrors = 0;
+  let numErr: number[] = [];
   if (!activeTextEditor) {
-    numErrandWarn[0] = numErrors;
-    numErrandWarn[1] = numWarnings;
-    return numErrandWarn;
+    numErr[0] = numErrors;
+    return numErr;
   }
   const document: vscode.TextDocument = activeTextEditor.document;
   let aggregatedDiagnostics: any = {};
@@ -325,20 +335,15 @@ function getNumErrAndWarn(): number[] {
         numErrors += 1;
         break;
 
-      case 1:
-        numWarnings += 1;
-        break;
-
       // Ignore other severities.
     }
   }
 
-  
-  numErrandWarn[0] = numErrors;
-  numErrandWarn[1] = numWarnings;
 
-  return numErrandWarn;
+  numErr[0] = numErrors;
+
+  return numErr;
 }
 
 // this method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() { }
