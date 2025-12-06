@@ -16,6 +16,6 @@ Set Faces To In Your Face, is a VSCode extension that shows your Favorite 'Uncan
 ![Loading...](https://raw.githubusercontent.com/virejdasani/Incredibly-InYourFace/main/assets/smallBanner.png)
 
 ---
-Check out [In Your Face](https://github.com/virejdasani/InYourFace/) which is based on Set Faces To In Your Face
-In Your Face is developed by [Virej Dasani](https://virejdasani.github.io/)
+Check out [In Your Face](https://github.com/virejdasani/InYourFace/) developed by [Virej Dasani](https://virejdasani.github.io/) which is based on Set Faces To In Your Face
+In Your Face
 
