@@ -12,4 +12,3 @@ Restart VS Code, and it should work.
 
 ---
 Check out [In Your Face](https://github.com/virejdasani/InYourFace/) developed by [Virej Dasani](https://virejdasani.github.io/) which is the base for the creation of Set Faces To In Your Face
-
