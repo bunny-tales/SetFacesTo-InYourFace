@@ -69,27 +69,27 @@
       }
     ],
     "configuration": {
-      "title": "Configurações da Extensão Set Your Face - In Your Face",
+      "title": "Extension settings Set Your Face - In Your Face",
       "properties": {
         "set-faces-to-in-your-face.customErrorImage0": {
           "type": "string",
           "default": "",
-          "description": "Imagem personalizada para 0 erros."
+          "description": "Custom image for 0 errors."
         },
         "set-faces-to-in-your-face.customErrorImage1": {
           "type": "string",
           "default": "",
-          "description": "Imagem personalizada para 1-4 erros."
+          "description": "Custom image for 1-4 errors."
         },
         "set-faces-to-in-your-face.customErrorImage2": {
           "type": "string",
           "default": "",
-          "description": "Imagem personalizada para 5-9 erros."
+          "description": "Custom image for 5-9 errors."
         },
         "set-faces-to-in-your-face.customErrorImage3": {
           "type": "string",
           "default": "",
-          "description": "Imagem personalizada para 10+ erros."
+          "description": "Custom image for 10+ errors."
         }
       }
     }
@@ -115,4 +115,5 @@
     "mocha": "^9.1.1",
     "typescript": "^4.7.3"
   }
+
 }
